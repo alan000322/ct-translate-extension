@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  /* 暖奶油紙底 + 暖墨色字（撐對比，讓馬卡龍色像原生的） */
+  --paper: oklch(0.985 0.006 95);
+  --ink: oklch(0.28 0.02 60);
+  --ink-soft: oklch(0.52 0.02 70);
+  --hairline: oklch(0.9 0.008 90);
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  width: 340px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, "Noto Sans TC", "PingFang TC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

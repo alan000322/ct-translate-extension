@@ -1,0 +1,166 @@
+import { useEffect, useState, type ReactNode } from "react"
+import type { Config, ProviderConfig, ProviderType, TargetLanguage } from "@/config/schema"
+import { PROVIDER_TYPES, TARGET_LANGUAGES } from "@/config/schema"
+import {
+  MODELS_BY_PROVIDER,
+  PROVIDER_LABELS,
+  TARGET_LANGUAGE_LABELS,
+} from "@/config/constants"
+import { getConfig, setConfig } from "@/config/storage"
+import { PROVIDER_MACARON } from "./theme"
+
+export function App() {
+  const [config, setLocalConfig] = useState<Config | null>(null)
+
+  useEffect(() => {
+    void getConfig().then(setLocalConfig)
+  }, [])
+
+  if (!config) {
+    return <div className="p-5 text-sm text-[var(--ink-soft)]">載入中…</div>
+  }
+
+  const active = config.providersConfig.find((p) => p.id === config.activeProviderId)
+
+  // 持久化 + 樂觀更新本地狀態。
+  function commit(next: Config) {
+    setLocalConfig(next)
+    void setConfig(next)
+  }
+
+  function selectProvider(id: string) {
+    commit({ ...config!, activeProviderId: id })
+  }
+
+  function patchActive(patch: Partial<ProviderConfig>) {
+    if (!active) return
+    commit({
+      ...config!,
+      providersConfig: config!.providersConfig.map((p) =>
+        p.id === active.id ? { ...p, ...patch } : p,
+      ),
+    })
+  }
+
+  function selectTarget(target: TargetLanguage) {
+    commit({ ...config!, language: { ...config!.language, targetCode: target } })
+  }
+
+  return (
+    <div className="flex flex-col gap-5 p-5">
+      <header className="flex items-baseline justify-between">
+        <h1 className="text-base font-semibold tracking-tight">CT翻翻</h1>
+        <span className="text-[11px] text-[var(--ink-soft)]">來源：自動偵測</span>
+      </header>
+
+      <Section label="翻譯服務">
+        <div className="grid grid-cols-2 gap-2">
+          {PROVIDER_TYPES.map((type) => (
+            <ProviderChip
+              key={type}
+              type={type}
+              active={active?.provider === type}
+              onSelect={() => selectProvider(type)}
+            />
+          ))}
+        </div>
+      </Section>
+
+      {active && (
+        <Section label="模型與金鑰">
+          <input
+            type="password"
+            value={active.apiKey ?? ""}
+            placeholder="API key"
+            onChange={(e) => patchActive({ apiKey: e.target.value })}
+            className="w-full rounded-md border border-[var(--hairline)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--ink-soft)]"
+          />
+          <select
+            value={active.model ?? ""}
+            onChange={(e) => patchActive({ model: e.target.value })}
+            className="w-full rounded-md border border-[var(--hairline)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--ink-soft)]"
+          >
+            {MODELS_BY_PROVIDER[active.provider].map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </Section>
+      )}
+
+      <Section label="目標語言">
+        <div className="flex gap-1.5">
+          {TARGET_LANGUAGES.map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => selectTarget(lang)}
+              className="flex-1 rounded-md border px-2 py-1.5 text-sm transition-colors"
+              style={
+                config.language.targetCode === lang
+                  ? { borderColor: "var(--ink)", color: "var(--ink)", fontWeight: 600 }
+                  : { borderColor: "var(--hairline)", color: "var(--ink-soft)" }
+              }
+            >
+              {TARGET_LANGUAGE_LABELS[lang]}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <p className="text-[11px] leading-relaxed text-[var(--ink-soft)]">
+        在網頁上懸停段落並按住
+        {" "}
+        <kbd className="rounded border border-[var(--hairline)] bg-white px-1">
+          {config.translate.node.hotkey}
+        </kbd>
+        {" "}
+        即可翻譯該段落，再按一次還原。
+      </p>
+    </div>
+  )
+}
+
+function Section({ label, children }: { label: string, children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--ink-soft)]">
+        {label}
+      </span>
+      {children}
+    </section>
+  )
+}
+
+function ProviderChip({
+  type,
+  active,
+  onSelect,
+}: {
+  type: ProviderType
+  active: boolean
+  onSelect: () => void
+}) {
+  const macaron = PROVIDER_MACARON[type]
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="flex items-center gap-2 rounded-md border px-3 py-2 text-left text-[13px] transition-colors"
+      style={{
+        background: active ? macaron.pastel : "transparent",
+        borderColor: active ? macaron.deep : "var(--hairline)",
+        color: "var(--ink)",
+        fontWeight: active ? 600 : 400,
+      }}
+    >
+      <span
+        className="size-2.5 shrink-0 rounded-full"
+        style={{ background: macaron.deep }}
+        aria-hidden
+      />
+      {PROVIDER_LABELS[type]}
+    </button>
+  )
+}

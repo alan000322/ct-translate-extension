@@ -1,0 +1,9 @@
+.spectra/
+openspec/.vector-search.db*
+
+# Node / WXT
+node_modules/
+.wxt/
+.output/
+stats.html
+*.log
