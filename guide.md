@@ -742,12 +742,12 @@ export async function geminiTranslate(
 
 ### 6.5 Google Translate（免費端點，手刻 fetch）
 
-這就是「Google Translate 要串哪」的答案：**沒有對應的官方付費 SDK 走免費路線**，read-frog 是直接打 Google 網頁版內部用的 `translate-pa.googleapis.com` 端點，帶一把網頁版公開 key。對照 `src/utils/host/translate/api/google.ts`，直接照搬即可：
+這就是「Google Translate 要串哪」的答案：**沒有對應的官方付費 SDK 走免費路線**，read-frog 是直接打 Google 網頁版內部用的 `translate-pa.googleapis.com` 端點，帶一把網頁版公開 key。對照 `src/utils/host/translate/api/google.ts`，實作時請自行查驗上游公開範例，不要把實際 key 寫進 repo：
 
 ```ts
 // src/core/translate/providers/google.ts
 const URL = "https://translate-pa.googleapis.com/v1/translateHtml"
-const API_KEY = "AIzaSyATBXajvzQLTDHEQbcpq0Ihe0vWDHmO520"  // Google 內部公開 key
+const API_KEY = "<GOOGLE_TRANSLATE_WEB_KEY>"  // 不要提交實際 key
 const CLIENT = "wt_lib"
 
 export async function googleTranslate(text: string, from: string, to: string): Promise<string> {

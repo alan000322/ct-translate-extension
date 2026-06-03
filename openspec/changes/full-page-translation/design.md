@@ -7,7 +7,7 @@
 - 訊息層：src/utils/messaging.ts 目前是單文字契約 { type:"translate", text } → { text } | { error }，所有 SDK/fetch 在 background。
 - 設定：src/config/schema.ts 的 translate.node.{enabled,hotkey}、translate.mode（bilingual / translationOnly）、translate.page.minWordsPerNode。
 
-參考專案 read-frog（/Users/chiatzuho/Projects/read-frog）提供兩個模式：(1) defuddle/full 在 snapshot HTMLDocument 上 parse（src/utils/host/translate/webpage-context.ts）；(2) `%%` 批次分隔符（src/utils/constants/prompt.ts 的 BATCH_SEPARATOR = "%%" 與 BATCH_SEPARATOR_LINE_PATTERN，parseBatchResult 切分，有 src/utils/request/__tests__/batch-separator-parsing.test.ts 覆蓋各種空白變體）。
+參考專案 read-frog 的本機 checkout 提供兩個模式：(1) defuddle/full 在 snapshot HTMLDocument 上 parse（src/utils/host/translate/webpage-context.ts）；(2) `%%` 批次分隔符（src/utils/constants/prompt.ts 的 BATCH_SEPARATOR = "%%" 與 BATCH_SEPARATOR_LINE_PATTERN，parseBatchResult 切分，有 src/utils/request/__tests__/batch-separator-parsing.test.ts 覆蓋各種空白變體）。
 
 本 change 在這條主幹上疊加「全區塊整頁翻譯」。需求已於 /spectra-discuss 鎖定，不再重新討論。
 

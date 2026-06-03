@@ -1,6 +1,19 @@
 .spectra/
 openspec/.vector-search.db*
 
+# Local secrets / credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cert
+
+# OS files
+.DS_Store
+
 # Node / WXT
 node_modules/
 .wxt/
