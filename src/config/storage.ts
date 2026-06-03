@@ -9,7 +9,7 @@ export const DEFAULT_CONFIG: Config = {
   providersConfig: [
     { id: "openai", provider: "openai", model: "gpt-4o-mini", temperature: 0 },
     { id: "anthropic", provider: "anthropic", model: "claude-sonnet-4-6", temperature: 0 },
-    { id: "google-gemini", provider: "google-gemini", model: "gemini-2.0-flash", temperature: 0 },
+    { id: "google-gemini", provider: "google-gemini", model: "gemini-3.5-flash", temperature: 0 },
   ],
   activeProviderId: "openai",
   translate: {
