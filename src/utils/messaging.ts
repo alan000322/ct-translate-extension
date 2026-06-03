@@ -1,15 +1,19 @@
-// content ↔ background 的串流訊息契約。
+// 呼叫端（content／擴充頁面）↔ background 的串流訊息契約。
 // 以長壽命 Port（chrome.runtime.connect）取代一次性 sendMessage/sendResponse，
-// 讓 background 能逐步把譯文片段（chunk）推回 content，支援打字機式串流與中途取消。
-// 每個翻譯請求開一條 translate-stream Port；done/error 後即斷線。
-// 所有 SDK／API key 仍只在 background 執行，content 端只開連線、收片段。
+// 讓 background 能逐步把輸出片段（chunk）推回呼叫端，支援打字機式串流與中途取消。
+// 每個請求開一條 translate-stream Port；done/error 後即斷線。
+// start 可帶任務種類 task（translate／summarize／analyze），未帶即視為 translate，
+// 既有懸停翻譯呼叫端零修改。所有 SDK／API key 仍只在 background 執行。
+import { DEFAULT_TASK, type TaskKind } from "@/core/translate/tasks"
+
 const PORT_NAME = "translate-stream" as const
 
-// content → background
+// 呼叫端 → background
 export interface StartMessage {
   type: "start"
   id: string
   text: string
+  task?: TaskKind
 }
 export interface CancelMessage {
   type: "cancel"
@@ -41,11 +45,15 @@ export interface StreamHandlers {
 }
 
 /**
- * content 端：以串流方式請求翻譯。
+ * 呼叫端：以串流方式請求任務（預設翻譯）。
  * 回傳一個 cancel 函式：呼叫即送 cancel 訊息並斷線，background 隨之中止 provider 串流。
  * 取消不會觸發 onError（cancel 後關閉視為正常）。連線在 done/error 後自動斷開。
  */
-export function requestTranslateStream(text: string, handlers: StreamHandlers): () => void {
+export function requestTranslateStream(
+  text: string,
+  handlers: StreamHandlers,
+  task: TaskKind = DEFAULT_TASK,
+): () => void {
   const id = crypto.randomUUID()
   const port = chrome.runtime.connect({ name: PORT_NAME })
   let settled = false
@@ -79,7 +87,13 @@ export function requestTranslateStream(text: string, handlers: StreamHandlers): 
     }
   })
 
-  port.postMessage({ type: "start", id, text } satisfies StartMessage)
+  // 預設任務不帶 task 欄位，維持與既有呼叫端 byte-identical 的訊息形狀。
+  port.postMessage({
+    type: "start",
+    id,
+    text,
+    ...(task !== DEFAULT_TASK ? { task } : {}),
+  } satisfies StartMessage)
 
   return () => {
     if (settled) return
@@ -89,8 +103,12 @@ export function requestTranslateStream(text: string, handlers: StreamHandlers): 
   }
 }
 
-// background 端的串流產生器：給定文字與 abort signal，逐步 yield 譯文增量片段。
-export type StreamProducer = (text: string, signal: AbortSignal) => AsyncIterable<string>
+// background 端的串流產生器：給定文字、任務種類與 abort signal，逐步 yield 輸出增量片段。
+export type StreamProducer = (
+  text: string,
+  task: TaskKind,
+  signal: AbortSignal,
+) => AsyncIterable<string>
 
 /**
  * background 端：註冊串流翻譯處理。所有 SDK/fetch 都在此 produce 內執行（key 不進頁面）。
@@ -119,9 +137,10 @@ export function registerTranslateStreamHandler(produce: StreamProducer): void {
       started = true
 
       const { id, text } = msg
+      const task: TaskKind = msg.task ?? DEFAULT_TASK // 未帶或舊呼叫端 → translate
       void (async () => {
         try {
-          for await (const delta of produce(text, controller.signal)) {
+          for await (const delta of produce(text, task, controller.signal)) {
             if (controller.signal.aborted) return
             if (delta) safePost({ type: "chunk", id, delta })
           }

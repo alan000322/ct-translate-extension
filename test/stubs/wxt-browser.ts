@@ -8,6 +8,9 @@ export const browser = {
       set: async (obj: Record<string, unknown>) => {
         Object.assign(store, obj)
       },
+      remove: async (key: string) => {
+        delete store[key]
+      },
     },
   },
   runtime: {

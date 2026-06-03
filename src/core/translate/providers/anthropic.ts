@@ -1,11 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk"
-import { DEFAULT_MODEL, translateSystemPrompt, type LLMTranslateOptions } from "./defaults"
+import { DEFAULT_MODEL, type LLMTranslateOptions } from "./defaults"
 
 // Anthropic（Claude）官方 SDK。system 為頂層參數，回傳是 content block 陣列。
 // anthropic-dangerous-direct-browser-access 讓非 server 來源（擴充）得以直連 API。
 export async function anthropicTranslate(
   text: string,
-  targetLangName: string,
+  systemPrompt: string,
   opts: LLMTranslateOptions,
 ): Promise<string> {
   const client = new Anthropic({
@@ -18,7 +18,7 @@ export async function anthropicTranslate(
     model: opts.model || DEFAULT_MODEL.anthropic,
     max_tokens: 4096,
     temperature: opts.temperature ?? 0,
-    system: translateSystemPrompt(targetLangName),
+    system: systemPrompt,
     messages: [{ role: "user", content: text }],
   })
 
@@ -33,7 +33,7 @@ export async function anthropicTranslate(
 // signal 透過 SDK request options 傳入以中止連線。
 export async function* anthropicTranslateStream(
   text: string,
-  targetLangName: string,
+  systemPrompt: string,
   opts: LLMTranslateOptions,
   signal?: AbortSignal,
 ): AsyncIterable<string> {
@@ -49,7 +49,7 @@ export async function* anthropicTranslateStream(
       max_tokens: 4096,
       temperature: opts.temperature ?? 0,
       stream: true,
-      system: translateSystemPrompt(targetLangName),
+      system: systemPrompt,
       messages: [{ role: "user", content: text }],
     },
     { signal },

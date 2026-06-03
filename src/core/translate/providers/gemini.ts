@@ -1,21 +1,32 @@
-import { GoogleGenAI } from "@google/genai"
-import { DEFAULT_MODEL, translateSystemPrompt, type LLMTranslateOptions } from "./defaults"
+import { GoogleGenAI, ThinkingLevel, type ThinkingConfig } from "@google/genai"
+import { DEFAULT_MODEL, type LLMTranslateOptions } from "./defaults"
+
+// gemini-3.5-flash 預設 MEDIUM 思考，翻譯用不到，壓到 MINIMAL 省延遲與費用。
+// gemini-3.1-flash-lite 不設定（維持模型預設）。
+function thinkingConfigFor(model: string): ThinkingConfig | undefined {
+  if (model.startsWith("gemini-3.5-flash")) {
+    return { thinkingLevel: ThinkingLevel.MINIMAL }
+  }
+  return undefined
+}
 
 // Google Gemini 官方 GenAI SDK（新版 @google/genai）。
 // systemInstruction 放在 config 內。
 export async function geminiTranslate(
   text: string,
-  targetLangName: string,
+  systemPrompt: string,
   opts: LLMTranslateOptions,
 ): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: opts.apiKey })
+  const model = opts.model || DEFAULT_MODEL["google-gemini"]
 
   const res = await ai.models.generateContent({
-    model: opts.model || DEFAULT_MODEL["google-gemini"],
+    model,
     contents: text,
     config: {
-      systemInstruction: translateSystemPrompt(targetLangName),
+      systemInstruction: systemPrompt,
       temperature: opts.temperature ?? 0,
+      thinkingConfig: thinkingConfigFor(model),
     },
   })
 
@@ -23,21 +34,23 @@ export async function geminiTranslate(
 }
 
 // 串流版本：generateContentStream(...)，逐 chunk yield chunk.text。
-// @google/genai 0.3.1 的 API 不接受 abortSignal，改在迴圈內檢查 signal 並中止消費。
 export async function* geminiTranslateStream(
   text: string,
-  targetLangName: string,
+  systemPrompt: string,
   opts: LLMTranslateOptions,
   signal?: AbortSignal,
 ): AsyncIterable<string> {
   const ai = new GoogleGenAI({ apiKey: opts.apiKey })
+  const model = opts.model || DEFAULT_MODEL["google-gemini"]
 
   const stream = await ai.models.generateContentStream({
-    model: opts.model || DEFAULT_MODEL["google-gemini"],
+    model,
     contents: text,
     config: {
-      systemInstruction: translateSystemPrompt(targetLangName),
+      systemInstruction: systemPrompt,
       temperature: opts.temperature ?? 0,
+      thinkingConfig: thinkingConfigFor(model),
+      abortSignal: signal,
     },
   })
 

@@ -1,11 +1,11 @@
 import OpenAI from "openai"
-import { DEFAULT_MODEL, translateSystemPrompt, type LLMTranslateOptions } from "./defaults"
+import { DEFAULT_MODEL, type LLMTranslateOptions } from "./defaults"
 
 // OpenAI 官方 SDK。於 background service worker 執行（key 不進頁面 context）。
 // dangerouslyAllowBrowser 僅為相容 SDK 的環境偵測；實際仍跑在 background。
 export async function openaiTranslate(
   text: string,
-  targetLangName: string,
+  systemPrompt: string,
   opts: LLMTranslateOptions,
 ): Promise<string> {
   const client = new OpenAI({
@@ -18,7 +18,7 @@ export async function openaiTranslate(
     model: opts.model || DEFAULT_MODEL.openai,
     temperature: opts.temperature ?? 0,
     messages: [
-      { role: "system", content: translateSystemPrompt(targetLangName) },
+      { role: "system", content: systemPrompt },
       { role: "user", content: text },
     ],
   })
@@ -30,7 +30,7 @@ export async function openaiTranslate(
 // signal 透過 SDK request options 傳入以中止連線。
 export async function* openaiTranslateStream(
   text: string,
-  targetLangName: string,
+  systemPrompt: string,
   opts: LLMTranslateOptions,
   signal?: AbortSignal,
 ): AsyncIterable<string> {
@@ -46,7 +46,7 @@ export async function* openaiTranslateStream(
       temperature: opts.temperature ?? 0,
       stream: true,
       messages: [
-        { role: "system", content: translateSystemPrompt(targetLangName) },
+        { role: "system", content: systemPrompt },
         { role: "user", content: text },
       ],
     },
