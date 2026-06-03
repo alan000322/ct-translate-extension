@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* 設計 token 與 popup（src/entrypoints/popup/style.css）同源：
+   暖奶油紙底 + 暖墨色字，馬卡龍色作功能識別。兩處皆小量複製、檔頭互註來源；
+   第三個頁面出現時再抽共用檔。 */
+:root {
+  color-scheme: light;
+  --paper: oklch(0.985 0.006 95);
+  --card: oklch(0.998 0.003 95);
+  --ink: oklch(0.28 0.02 60);
+  --ink-soft: oklch(0.52 0.02 70);
+  --hairline: oklch(0.9 0.008 90);
+
+  /* 任務馬卡龍：色彩＝資訊。每個任務固定一個 hue，僅用於狀態點與 chip，不上身文。 */
+  --pistachio: oklch(0.91 0.06 150); /* 翻譯 */
+  --pistachio-deep: oklch(0.55 0.11 152);
+  --lemon: oklch(0.93 0.07 100); /* 全文摘要 */
+  --lemon-deep: oklch(0.6 0.11 95);
+  --rose: oklch(0.92 0.05 15); /* 研究重點剖析 */
+  --rose-deep: oklch(0.57 0.13 18);
+
+  /* 錯誤／超限：獨立陶土色，不與任務 hue 混用。 */
+  --alert: oklch(0.52 0.15 35);
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, "Noto Sans TC", "PingFang TC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 鍵盤焦點環：一致、外擴、不蓋內容。 */
+:focus-visible {
+  outline: 2px solid var(--ink-soft);
+  outline-offset: 2px;
+}
+
+/* 段落編號等數字對齊（instrument-grade 細節）。 */
+.ct-num {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 串流游標：打字機式閃爍。 */
+@keyframes ct-caret {
+  50% {
+    opacity: 0;
+  }
+}
+.ct-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--pistachio-deep);
+  animation: ct-caret 1s steps(1) infinite;
+}
+
+/* 串流中狀態點的呼吸。 */
+@keyframes ct-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.ct-pulse {
+  animation: ct-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-caret,
+  .ct-pulse {
+    animation: none;
+  }
+}

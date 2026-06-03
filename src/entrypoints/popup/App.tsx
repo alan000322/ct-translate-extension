@@ -48,13 +48,22 @@ export function App() {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-base font-semibold tracking-tight">CT翻翻</h1>
-        <span className="text-[11px] text-[var(--ink-soft)]">來源：自動偵測</span>
-      </header>
-
-      <Section label="翻譯服務">
-        <div className="grid grid-cols-2 gap-2">
+      <Section
+        label="翻譯服務"
+        trailing={(
+          // 整段翻譯：開獨立分頁，貼上文字逐段翻譯與全文分析。
+          <button
+            type="button"
+            onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL("/passage.html") })}
+            title="整段翻譯：開新分頁貼上文字逐段翻譯"
+            aria-label="整段翻譯：開新分頁貼上文字逐段翻譯"
+            className="rounded border border-[var(--hairline)] bg-white px-1.5 text-[11px] leading-5 text-[var(--ink-soft)] transition-colors hover:border-[var(--ink-soft)] hover:text-[var(--ink)]"
+          >
+            整段 ↗
+          </button>
+        )}
+      >
+        <div className="grid grid-cols-3 gap-1.5">
           {PROVIDER_TYPES.map((type) => (
             <ProviderChip
               key={type}
@@ -122,12 +131,23 @@ export function App() {
   )
 }
 
-function Section({ label, children }: { label: string, children: ReactNode }) {
+function Section({
+  label,
+  trailing,
+  children,
+}: {
+  label: string
+  trailing?: ReactNode
+  children: ReactNode
+}) {
   return (
     <section className="flex flex-col gap-2">
-      <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--ink-soft)]">
-        {label}
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--ink-soft)]">
+          {label}
+        </span>
+        {trailing}
+      </div>
       {children}
     </section>
   )
@@ -147,7 +167,7 @@ function ProviderChip({
     <button
       type="button"
       onClick={onSelect}
-      className="flex items-center gap-2 rounded-md border px-3 py-2 text-left text-[13px] transition-colors"
+      className="flex items-center justify-center gap-1.5 rounded-md border px-1.5 py-1.5 text-[12px] transition-colors"
       style={{
         background: active ? macaron.pastel : "transparent",
         borderColor: active ? macaron.deep : "var(--hairline)",
@@ -156,7 +176,7 @@ function ProviderChip({
       }}
     >
       <span
-        className="size-2.5 shrink-0 rounded-full"
+        className="size-2 shrink-0 rounded-full"
         style={{ background: macaron.deep }}
         aria-hidden
       />
